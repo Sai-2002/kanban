@@ -116,6 +116,7 @@ def updateCard(u_id, listId, cardId):
         "name" : request.form["cardName"],
         "description" : request.form["cardDescription"],
         "deadLineDate" : request.form["deadLineDate"],
+        "listId" : request.form["listName"],
         "status" : "false"
     }
 
@@ -128,8 +129,11 @@ def updateCard(u_id, listId, cardId):
         if userId == u_id:
             c.execute("SELECT listId FROM contains WHERE listId = ?",(listId,))
             List = c.fetchone()
-            if List[0] == int(listId):
+            c.execute("SELECT listId FROM list WHERE listId = ?",(card_detatils["listId"],))
+            LISt = c.fetchone();
+            if List[0] == int(listId) and LISt[0] == int(card_detatils["listId"]):
                 c.execute("UPDATE card SET cardName = ?, cardDescription = ?, deadLineDate = ?, status = ? WHERE cardId = ?", (card_detatils["name"], card_detatils["description"], card_detatils["deadLineDate"], card_detatils["status"], cardId))
+                c.execute("UPDATE contains SET listId = ? WHERE cardId = ?",(LISt[0], cardId))
             else:
                 return Response(
                     response=json.dumps({"message": "There is no such List."}),
@@ -162,4 +166,43 @@ def updateCard(u_id, listId, cardId):
 @app.route(f"{version}/deleteCard/<listId>/<cardId>", methods=["POST"])
 @token_required
 def deleteCard(u_id, listId, cardId):
-    pass
+    try:
+        conn = sqlite3.connect(database_locale)
+        c = conn.cursor()
+        c.execute("SELECT userId FROM creates WHERE listId=?",(listId,))
+        userId = c.fetchone()
+
+        if userId == u_id:
+            c.execute("SELECT listId FROM contains WHERE listId = ?",(listId,))
+            List = c.fetchone()
+            if List[0] == int(listId):
+                c.execute("DELETE FROM card WHERE cardId = ?",(cardId,))
+                c.execute("DELETE FROM contains WHERE cardId =?,"(cardId))
+            else:
+                return Response(
+                    response=json.dumps({"message": "There is no such List."}),
+                    status=200,
+                    mimetype="application/json"
+                )
+        else:
+            return Response(
+                response=json.dumps({"message": "Unauthorized access"}),
+                status=200,
+                mimetype="application/json"
+            )
+
+        conn.commit()
+        conn.close()
+
+        return Response(
+            response=json.dumps({"message": f"The card is deleted"}),
+            status=200,
+            mimetype="application/json"
+        )
+        
+    except sqlite3.Error as e:
+        print(e)
+        return Response(
+                        response=json.dumps({"message" : "Cannot delete card"}),
+                        status=401,
+                        mimetype="applicatiion/json")
