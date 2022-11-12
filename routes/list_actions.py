@@ -5,6 +5,9 @@ from flask import Response, request, jsonify
 import sqlite3
 from routes.user_action import token_required, database_locale
 
+
+list_profile = ("listId", "listName", "listDescription", "imageName")
+
 @app.route(f"{version}/createlist", methods=["POST"])
 @token_required
 def createlist(u_id):
@@ -91,10 +94,17 @@ def getAllList(u_id):
         c = conn.cursor()
         c.execute("select * from list where listId in (select c.listId from list l, creates c where l.listId = c.listId and c.userId = ?)", (u_id[0],))
         lists = c.fetchall()
+        resultArr = []
+
+        for lis in lists:
+            if len(list_profile) == len(lis):
+                resultDict = {list_profile[i] : lis[i] for i, _ in enumerate(list_profile)}
+                resultArr.append(resultDict)
+            
         conn.commit()
         conn.close()
         return Response(
-            response=json.dumps({"message": f"{lists}"}),
+            response=json.dumps({"Lists": resultArr}),
             status=200,
             mimetype="application/json"
         )
@@ -118,6 +128,8 @@ def getList(u_id, listId):
         if userId == u_id:
             c.execute("SELECT * FROM list WHERE listId = ?",(listId,))
             List = c.fetchone()
+            if len(list_profile) == len(List):
+                resultDict = {list_profile[i] : List[i] for i, _ in enumerate(list_profile)}
         else:
             return Response(
                 response=json.dumps({"message": "Unauthorized access"}),
@@ -129,7 +141,7 @@ def getList(u_id, listId):
         conn.close()
 
         return Response(
-            response=json.dumps({"message": f"{List}"}),
+            response=json.dumps({"message": List}),
             status=200,
             mimetype="application/json"
         )

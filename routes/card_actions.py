@@ -4,6 +4,9 @@ from flask import Response, request, jsonify
 import sqlite3
 from routes.user_action import token_required, database_locale
 
+
+card_profile = ("cardId", "cardName","cardDescription", "deadLineDate", "status", "listId")
+
 @app.route(f"{version}/createCard/<listId>", methods=["POST"])
 @token_required
 def createCard(u_id, listId):
@@ -48,10 +51,19 @@ def getAllCard(u_id, listId):
         c = conn.cursor()
         c.execute("select card.cardId, card.cardName, card.cardDescription, card.deadLineDate, card.status, contains.listId from card,contains where card.cardId = contains.cardId and card.cardId in (select c.cardId from card l, contains c where l.cardId = c.cardId and c.listId = ?);", (listId))
         cards = c.fetchall()
+
+        resultArr = []
+
+        for card in cards:
+            if len(card_profile) == len(card):
+                resultDict = {card_profile[i] : card[i] for i, _ in enumerate(card_profile)}
+                resultArr.append(resultDict)
+
+
         conn.commit()
         conn.close()
         return Response(
-            response=json.dumps({"message": f"{cards}"}),
+            response=json.dumps({"message": resultArr}),
             status=200,
             mimetype="application/json"
         )
@@ -78,6 +90,9 @@ def getCard(u_id, listId, cardId):
                 c.execute("SELECT * FROM card WHERE cardId = ?",(cardId,))
                 card = c.fetchone()
                 card = card + List
+
+                if len(card_profile) == len(card):
+                    resultDict = {card_profile[i] : card[i] for i, _ in enumerate(card_profile)}
             else:
                 return Response(
                     response=json.dumps({"message": "There is no such List."}),
@@ -95,7 +110,7 @@ def getCard(u_id, listId, cardId):
         conn.close()
 
         return Response(
-            response=json.dumps({"card": f"{card}"}),
+            response=json.dumps({"card": resultDict}),
             status=200,
             mimetype="application/json"
         )
@@ -141,6 +156,7 @@ def updateCard(u_id, listId, cardId):
                     mimetype="application/json"
                 )
         else:
+            
             return Response(
                 response=json.dumps({"message": "Unauthorized access"}),
                 status=200,

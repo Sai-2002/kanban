@@ -74,11 +74,9 @@ def login():
             user_details = user_details + (token,)
 
             if len(user_details) == len(user_profile):
-                resultDict = {user_profile[i] : user_details[i] for i, _ in enumerate(user_profile)}
-                print(f"{resultDict}")
-            
+                resultDict = {user_profile[i] : user_details[i] for i, _ in enumerate(user_profile)}            
                 return Response(
-                                response=json.dumps({"userDetails":f"{resultDict}"}),
+                                response=json.dumps({"userDetails":resultDict}),
                                 status=200,
                                 mimetype="application/json")
         else:
@@ -126,7 +124,7 @@ def signup():
         if len(user_details) == len(user_profile):
             resultDict = {user_profile[i] : user_details[i] for i, _ in enumerate(user_profile)}
             return Response(
-                response=json.dumps({"userDetails": f"{resultDict}"}),
+                response=json.dumps({"userDetails": resultDict}),
                 status=200,
                 mimetype="application/json"
             )
