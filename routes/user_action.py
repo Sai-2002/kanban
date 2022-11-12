@@ -52,6 +52,8 @@ def token_generate(username):
 @app.route(f"{version}/login", methods=["POST"])
 def login():
     
+
+    user_profile = ("userId", "firstName", "lastName", "userName", "password","phoneNumber","gmail", "token")
     # getting login info from the form
     login = {
         "userName" : request.form["userName"],
@@ -70,10 +72,15 @@ def login():
             conn.close()
             token = token_generate(login["userName"])
             user_details = user_details + (token,)
-            return Response(
-                            response=json.dumps({"userDetails":f"{user_details}"}),
-                            status=200,
-                            mimetype="application/json")
+
+            if len(user_details) == len(user_profile):
+                resultDict = {user_profile[i] : user_details[i] for i, _ in enumerate(user_profile)}
+                print(f"{resultDict}")
+            
+                return Response(
+                                response=json.dumps({"userDetails":f"{resultDict}"}),
+                                status=200,
+                                mimetype="application/json")
         else:
             return Response(
                             response=json.dumps({"message" : "Password Incorrect. Try again!!"}),
@@ -93,6 +100,7 @@ def login():
 @app.route(f"{version}/signup", methods=["POST"])
 def signup():
 
+    user_profile = ("userId", "firstName", "lastName", "userName", "password","phoneNumber","gmail", "token")
 # creating a user dict to store the values from the forms
     user = {"fname" : request.form["firstName"],
             "lname" : request.form["lastName"],
@@ -110,16 +118,18 @@ def signup():
         c.execute("INSERT INTO user(firstName, lastName, gmail, userName, password, phoneNumber) VALUES (?, ?, ?, ?, ?, ?)", (user["fname"], user["lname"], user["gmail"], user["username"], user["password"], user["phoneNumber"]))
         conn.commit()
         # note create a function to retrieve the uid and create a token and send it back
-        
+        c.execute("SELECT * FROM user WHERE userName = ?",(user["username"],))
+        user_details = c.fetchone()    
         token = token_generate(user["username"])
         
-        user["jwt"] = token
-
-        return Response(
-            response=json.dumps({"userDetails": user}),
-            status=200,
-            mimetype="application/json"
-        )
+        user_details = user_details + (token,)
+        if len(user_details) == len(user_profile):
+            resultDict = {user_profile[i] : user_details[i] for i, _ in enumerate(user_profile)}
+            return Response(
+                response=json.dumps({"userDetails": f"{resultDict}"}),
+                status=200,
+                mimetype="application/json"
+            )
     else:
         return Response(
             response=json.dumps({"message" : "Password Incorrect. Try again!!"}),
