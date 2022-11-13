@@ -24,14 +24,13 @@ def createlist(u_id):
         conn = sqlite3.connect(database_locale)
         c = conn.cursor()
         c.execute("INSERT INTO list(listName, listDescription, imageName) VALUES (?, ?, ?)", (list_detatils["name"], list_detatils["description"], list_detatils["image"]))
-        c.execute("SELECT listId FROM list WHERE listName=?", (list_detatils["name"],))
+        c.execute("SELECT listId FROM list ORDER BY listId DESC LIMIT 1")
         list_id = c.fetchone()
         c.execute("INSERT INTO creates(userId, listId) VALUES(?,?)",(u_id[0],list_id[0]))
         conn.commit()
         redis_cli.rpush(u_id[0], list_id[0])
         list_detatils["listId"] = list_id[0]
         redis_cli.set(f"list{list_id[0]}", json.dumps(list_detatils))
-        print(list_detatils)
         conn.close()
 
         return Response(
@@ -98,14 +97,13 @@ def getAllList(u_id):
 
     resultArr = []
     try:
-        print("*********")
+        print("*******")
         if redis_cli.exists(u_id[0]):
-            print("hell")
             lists = redis_cli.lrange(u_id[0], 0, -1)
             for List in lists:
                 resultArr.append(ast.literal_eval(redis_cli.get(f"list{List}")))
         else: 
-            print("hel")
+            print("&&&&&&&&&")
             conn = sqlite3.connect(database_locale)
             c = conn.cursor()
             c.execute("select * from list where listId in (select c.listId from list l, creates c where l.listId = c.listId and c.userId = ?)", (u_id[0],))
@@ -203,8 +201,6 @@ def deleteList(u_id, listId):
             
             redis_cli.delete(u_id[0])
             redis_cli.delete(f"list{listId}")
-            print(lists)
-
             for lis in lists:
                 if len(list_profile) == len(lis):
                     resultDict = {list_profile[i] : lis[i] for i, _ in enumerate(list_profile)}
