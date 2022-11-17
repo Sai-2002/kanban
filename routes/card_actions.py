@@ -165,7 +165,7 @@ def updateCard(u_id, listId, cardId):
         "description" : request.form["cardDescription"],
         "deadLineDate" : request.form["deadLineDate"],
         "listId" : request.form["listName"],
-        "status" : "false"
+        "status" : request.form["status"]
     }
 
     try:
@@ -244,9 +244,22 @@ def deleteCard(u_id, listId, cardId):
         if userId == u_id:
             c.execute("SELECT listId FROM contains WHERE listId = ?",(listId,))
             List = c.fetchone()
+            
             if List[0] == int(listId):
                 c.execute("DELETE FROM card WHERE cardId = ?",(cardId,))
-                c.execute("DELETE FROM contains WHERE cardId =?,"(cardId,))
+                c.execute("DELETE FROM contains WHERE cardId =?",(cardId,))
+
+                c.execute("SELECT cardId FROM contains WHERE listId = ?", (listId,))
+                card_Id = c.fetchall()
+
+                redis_cli.delete(f"listId{listId}")
+
+                for card in card_Id:
+                    for c in card:
+                        redis_cli.rpush(f"listId{listId}", c)
+
+                redis_cli.delete(f"card{cardId}")
+
             else:
                 return Response(
                     response=json.dumps({"message": "There is no such List."}),

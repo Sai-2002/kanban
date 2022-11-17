@@ -97,18 +97,19 @@ def getAllList(u_id):
 
     resultArr = []
     try:
-        print("*******")
         if redis_cli.exists(u_id[0]):
             lists = redis_cli.lrange(u_id[0], 0, -1)
+            total_cards = len(lists)
             for List in lists:
                 resultArr.append(ast.literal_eval(redis_cli.get(f"list{List}")))
         else: 
-            print("&&&&&&&&&")
             conn = sqlite3.connect(database_locale)
             c = conn.cursor()
             c.execute("select * from list where listId in (select c.listId from list l, creates c where l.listId = c.listId and c.userId = ?)", (u_id[0],))
             lists = c.fetchall()
 
+            total_cards = len(lists)
+            
             for lis in lists:
                 if len(list_profile) == len(lis):
                     resultDict = {list_profile[i] : lis[i] for i, _ in enumerate(list_profile)}
@@ -119,7 +120,7 @@ def getAllList(u_id):
             conn.commit()
             conn.close()
         return Response(
-            response=json.dumps({"Lists": resultArr}),
+            response=json.dumps({"Lists": resultArr, "total_cards" : total_cards}),
             status=200,
             mimetype="application/json"
         )
