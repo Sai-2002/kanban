@@ -73,9 +73,8 @@ def getAllCard(u_id, listId):
         else:
             conn = sqlite3.connect(database_locale)
             c = conn.cursor()
-            c.execute("select card.cardId, card.cardName, card.cardDescription, card.deadLineDate, card.status, contains.listId from card,contains where card.cardId = contains.cardId and card.cardId in (select c.cardId from card l, contains c where l.cardId = c.cardId and c.listId = ?);", (listId))
+            c.execute("select card.cardId, card.cardName, card.cardDescription, card.deadLineDate, card.status, contains.listId from card,contains where card.cardId = contains.cardId and card.cardId in (select c.cardId from card l, contains c where l.cardId = c.cardId and c.listId = ?)", (listId,))
             cards = c.fetchall()
-
             for card in cards:
                 if len(card_profile) == len(card):
                     resultDict = {card_profile[i] : card[i] for i, _ in enumerate(card_profile)}
@@ -180,8 +179,7 @@ def updateCard(u_id, listId, cardId):
             c.execute("SELECT listId FROM list WHERE listId = ?",(card_detatils["listId"],))
             LISt = c.fetchone();
 
-            if List[0] == int(listId) and LISt[0] == int(card_detatils["listId"]):
-
+            if List and LISt:
 
                 c.execute("UPDATE card SET cardName = ?, cardDescription = ?, deadLineDate = ?, status = ? WHERE cardId = ?", (card_detatils["name"], card_detatils["description"], card_detatils["deadLineDate"], card_detatils["status"], cardId))
                 c.execute("UPDATE contains SET listId = ? WHERE cardId = ?",(LISt[0], cardId))
@@ -192,12 +190,14 @@ def updateCard(u_id, listId, cardId):
 
 
                 redis_cli.delete(f"listId{listId}")
+                redis_cli.delete(f"card{cardId}")
 
                 for card in card_Id:
                     for c in card:
                         redis_cli.rpush(f"listId{listId}", c)
-
-                redis_cli.rpush(f"listId{card_detatils['listId']}", cardId)
+                
+                if List[0] != LISt[0]:
+                    redis_cli.rpush(f"listId{card_detatils['listId']}", cardId)
 
                 card_detatils["cardId"] = cardId
                 redis_cli.set(f"card{card_Id}", json.dumps(card_detatils))
@@ -288,3 +288,48 @@ def deleteCard(u_id, listId, cardId):
                         response=json.dumps({"message" : "Cannot delete card"}),
                         status=401,
                         mimetype="applicatiion/json")
+
+
+@app.route(f"{version}/getCardCount/<listId>", methods=["GET"])
+@token_required
+def getCardCount(u_id, listId):
+    
+    total_count = 0
+    completed_card = 0 
+
+    try:
+        if redis_cli.exists(f"listId{listId}"):
+            cards = redis_cli.lrange(f"listId{listId}", 0, -1)
+            total_count = len(cards)
+            for card in cards:
+                resultArr = ast.literal_eval(redis_cli.get(f"card{card}"))
+                if(resultArr['status'] != 'false'):
+                    completed_card = completed_card+1    
+
+        else:
+            conn = sqlite3.connect(database_locale)
+            c = conn.cursor()
+            c.execute("select card.cardId, card.cardName, card.cardDescription, card.deadLineDate, card.status, contains.listId from card,contains where card.cardId = contains.cardId and card.cardId in (select c.cardId from card l, contains c where l.cardId = c.cardId and c.listId = ?);", (listId,))
+            cards = c.fetchall()
+
+            total_count = len(cards)
+            for card in cards:
+                if len(card_profile) == len(card):
+                    resultDict = {card_profile[i] : card[i] for i, _ in enumerate(card_profile)}
+                    if(resultDict['status'] != 'false'):
+                        completed_card = completed_card+1
+                    
+            conn.commit()
+            conn.close()
+            
+        return Response(
+            response=json.dumps({"total_cards": total_count, "completed_card" : completed_card, "incomplete_card" : total_count-completed_card}),
+            status=200,
+            mimetype="application/json"
+        )
+    except:
+        return Response(
+            response=json.dumps({"message":"Cannot display all card"}),
+            status=200,
+            mimetype="application/json"
+        )
