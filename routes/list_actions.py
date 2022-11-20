@@ -14,9 +14,9 @@ def createlist(u_id):
     # getting list details from the form
 
     list_detatils = {
-        "name" : request.form["listName"],
-        "description" : request.form["listDescription"],
-        "image" : request.form["imageName"]
+        "listName" : request.form["listName"],
+        "listDdescription" : request.form["listDescription"],
+        "imageName" : request.form["imageName"]
     }
 
     try:
