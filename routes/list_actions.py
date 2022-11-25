@@ -23,7 +23,7 @@ def createlist(u_id):
         # creating database connection and cursor
         conn = sqlite3.connect(database_locale)
         c = conn.cursor()
-        c.execute("INSERT INTO list(listName, listDescription, imageName) VALUES (?, ?, ?)", (list_detatils["name"], list_detatils["description"], list_detatils["image"]))
+        c.execute("INSERT INTO list(listName, listDescription, imageName) VALUES (?, ?, ?)", (list_detatils["listName"], list_detatils["listDescription"], list_detatils["imageName"]))
         c.execute("SELECT listId FROM list ORDER BY listId DESC LIMIT 1")
         list_id = c.fetchone()
         c.execute("INSERT INTO creates(userId, listId) VALUES(?,?)",(u_id[0],list_id[0]))

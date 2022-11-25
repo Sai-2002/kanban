@@ -14,11 +14,11 @@ card_profile = ("cardId", "cardName","cardDescription", "deadLineDate","cardCrea
 def createCard(u_id, listId):
 
     card_detatils = {
-        "name" : request.form["cardName"],
-        "description" : request.form["cardDescription"],
+        "cardName" : request.form["cardName"],
+        "cardDescription" : request.form["cardDescription"],
         "deadLineDate" : request.form["deadLineDate"],
-        "cardCreatedDate" : date.today().strftime("%d/%m/%Y"),
-        "cardCompletedDate" : "00/00/0000",
+        "cardCreatedDate" : date.today(),
+        "cardCompletedDate" : "0000-00-00",
         "status" : "false"
     }
 
@@ -36,7 +36,7 @@ def createCard(u_id, listId):
                         status=401,
                         mimetype="applicatiion/json")
         else:
-            c.execute("INSERT INTO card(cardName, cardDescription, deadLineDate, cardCreatedDate, cardCompletedDate, status) VALUES (?, ?, ?, ?, ?, ?)", (card_detatils["name"], card_detatils["description"], card_detatils["deadLineDate"], card_detatils["cardCreatedDate"], card_detatils["cardCompletedDate"], card_detatils["status"]))
+            c.execute("INSERT INTO card(cardName, cardDescription, deadLineDate, cardCreatedDate, cardCompletedDate, status) VALUES (?, ?, ?, ?, ?, ?)", (card_detatils["cardName"], card_detatils["cardDescription"], card_detatils["deadLineDate"], card_detatils["cardCreatedDate"], card_detatils["cardCompletedDate"], card_detatils["status"]))
             c.execute("SELECT cardId FROM card ORDER BY cardId DESC LIMIT 1")
             card_id = c.fetchone()
             c.execute("INSERT INTO contains(listId, cardId) VALUES(?,?)",(listId,card_id[0]))
@@ -68,14 +68,12 @@ def getAllCard(u_id, listId):
     resultArr = []
     
     try:
-        print("SAAAIIII")
         if redis_cli.exists(f"listId{listId}"):
             cards = redis_cli.lrange(f"listId{listId}", 0, -1)
             for card in cards:
                 resultArr.append(ast.literal_eval(redis_cli.get(f"card{card}")))
 
         else:
-            print("SAIIII")
             conn = sqlite3.connect(database_locale)
             c = conn.cursor()
             c.execute("select card.cardId, card.cardName, card.cardDescription, card.deadLineDate, card.cardCreatedDate, card.cardCompletedDate, card.status, contains.listId from card,contains where card.cardId = contains.cardId and card.cardId in (select c.cardId from card l, contains c where l.cardId = c.cardId and c.listId = ?)", (listId,))
@@ -124,7 +122,7 @@ def getCard(u_id, listId, cardId):
                 c.execute("SELECT listId FROM contains WHERE listId = ?",(listId,))
                 List = c.fetchone()
                 if List[0] == int(listId):
-                    c.execute("SELECT * FROM card WHERE cardId = ?",(cardId,))
+                    c.execute("SELECT cardId, cardName, cardDescription ,deadLineDate,cardCreatedDate ,cardCompletedDate,status FROM card WHERE cardId = ?",(cardId,))
                     card = c.fetchone()
                     card = card + List
 
@@ -173,9 +171,9 @@ def updateCard(u_id, listId, cardId):
     }
 
     if card_detatils["status"] == 'true':
-        card_detatils['cardCompletedDate'] = date.today().strftime("%d/%m/%Y")
+        card_detatils['cardCompletedDate'] = date.today()
     else:
-        card_detatils['cardCompletedDate'] = "00/00/00"
+        card_detatils['cardCompletedDate'] = "0000-00-00"
 
 
     try:
