@@ -83,6 +83,7 @@ def getAllCard(u_id, listId):
                     resultDict = {card_profile[i] : card[i] for i, _ in enumerate(card_profile)}
                     redis_cli.rpush(f"listId{listId}", card[0])
                     redis_cli.set(f"card{card[0]}", json.dumps(resultDict))
+
                     resultArr.append(resultDict)
 
             conn.commit()
@@ -163,7 +164,7 @@ def getCard(u_id, listId, cardId):
 def updateCard(u_id, listId, cardId):
 
     card_detatils = {
-        "cardNname" : request.form["cardName"],
+        "cardName" : request.form["cardName"],
         "cardDescription" : request.form["cardDescription"],
         "deadLineDate" : request.form["deadLineDate"],
         "listId" : request.form["listName"],
@@ -209,6 +210,10 @@ def updateCard(u_id, listId, cardId):
                     redis_cli.rpush(f"listId{card_detatils['listId']}", cardId)
 
                 card_detatils["cardId"] = cardId
+
+                c.execute("select cardCreatedDate from card where cardId = ?",(cardId,))
+                cardCreatedDate = c.fetchone()
+                card_detatils['cardCreatedDate'] = cardCreatedDate  
                 redis_cli.set(f"card{cardId}", json.dumps(card_detatils))
 
             else:
