@@ -15,7 +15,7 @@ def createlist(u_id):
 
     list_detatils = {
         "listName" : request.form["listName"],
-        "listDdescription" : request.form["listDescription"],
+        "listDescription" : request.form["listDescription"],
         "imageName" : request.form["imageName"]
     }
 
@@ -34,7 +34,7 @@ def createlist(u_id):
         conn.close()
 
         return Response(
-            response=json.dumps({"message":f"{list_detatils['name']} list is created"}),
+            response=json.dumps({"message":f"{list_detatils['listName']} list is created"}),
             status=200,
             mimetype="application/json"
         )

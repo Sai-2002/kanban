@@ -46,7 +46,7 @@ def token_generate(username):
     conn.commit()
     conn.close()
 
-    token = jwt.encode({'user_id' : u_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=10)}, app.config['SECRET_KEY'])    
+    token = jwt.encode({'user_id' : u_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=5)}, app.config['SECRET_KEY'])    
     return token
 
 @app.route(f"{version}/login", methods=["POST"])

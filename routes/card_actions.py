@@ -17,7 +17,7 @@ def createCard(u_id, listId):
         "cardName" : request.form["cardName"],
         "cardDescription" : request.form["cardDescription"],
         "deadLineDate" : request.form["deadLineDate"],
-        "cardCreatedDate" : date.today(),
+        "cardCreatedDate" : str(date.today()),
         "cardCompletedDate" : "0000-00-00",
         "status" : "false"
     }
@@ -49,7 +49,7 @@ def createCard(u_id, listId):
             conn.close()
 
             return Response(
-                response=json.dumps({"message":f"{card_detatils['name']} card is created"}),
+                response=json.dumps({"message":f"{card_detatils['cardName']} card is created"}),
                 status=200,
                 mimetype="application/json"
             )
@@ -163,15 +163,15 @@ def getCard(u_id, listId, cardId):
 def updateCard(u_id, listId, cardId):
 
     card_detatils = {
-        "name" : request.form["cardName"],
-        "description" : request.form["cardDescription"],
+        "cardNname" : request.form["cardName"],
+        "cardDescription" : request.form["cardDescription"],
         "deadLineDate" : request.form["deadLineDate"],
         "listId" : request.form["listName"],
         "status" : request.form["status"]
     }
 
     if card_detatils["status"] == 'true':
-        card_detatils['cardCompletedDate'] = date.today()
+        card_detatils['cardCompletedDate'] = str(date.today())
     else:
         card_detatils['cardCompletedDate'] = "0000-00-00"
 
@@ -190,7 +190,7 @@ def updateCard(u_id, listId, cardId):
 
             if List and LISt:
 
-                c.execute("UPDATE card SET cardName = ?, cardDescription = ?, deadLineDate = ?, cardCompletedDate = ?,status = ? WHERE cardId = ?", (card_detatils["name"], card_detatils["description"], card_detatils["deadLineDate"], card_detatils["cardCompletedDate"],card_detatils["status"], cardId))
+                c.execute("UPDATE card SET cardName = ?, cardDescription = ?, deadLineDate = ?, cardCompletedDate = ?,status = ? WHERE cardId = ?", (card_detatils["cardNname"], card_detatils["cardDescription"], card_detatils["deadLineDate"], card_detatils["cardCompletedDate"],card_detatils["status"], cardId))
                 c.execute("UPDATE contains SET listId = ? WHERE cardId = ?",(LISt[0], cardId))
                 conn.commit()
 
@@ -229,7 +229,7 @@ def updateCard(u_id, listId, cardId):
         conn.close()
 
         return Response(
-            response=json.dumps({"message": f"{card_detatils['name']} is updated"}),
+            response=json.dumps({"message": f"{card_detatils['cardName']} is updated"}),
             status=200,
             mimetype="application/json"
         )
