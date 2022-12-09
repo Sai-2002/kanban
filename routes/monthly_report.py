@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 from routes.mail import newMake
 def dailyReport():
-    
+    print("llll")
     try:
         conn = sqlite3.connect(database_locale)
         c = conn.cursor()

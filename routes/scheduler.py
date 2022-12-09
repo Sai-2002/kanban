@@ -3,10 +3,9 @@ import schedule
 import time
 
 def Scheduled():
-
-    schedule.every(10).seconds.do(dailyReport)
-
+    
+    schedule.every().day.at("05:00").do(dailyReport)
+    
     while True:
-        print("scedhuler")
         schedule.run_pending()
         time.sleep(1)

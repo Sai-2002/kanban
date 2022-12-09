@@ -202,6 +202,10 @@ def updateCard(u_id, listId, cardId):
                 redis_cli.delete(f"listId{listId}")
                 redis_cli.delete(f"card{cardId}")
 
+                c.execute("select cardCreatedDate from card where cardId = ?",(cardId,))
+                cardCreatedDate = c.fetchone()
+                card_detatils['cardCreatedDate'] = cardCreatedDate 
+                
                 for card in card_Id:
                     for c in card:
                         redis_cli.rpush(f"listId{listId}", c)
@@ -211,9 +215,7 @@ def updateCard(u_id, listId, cardId):
 
                 card_detatils["cardId"] = cardId
 
-                c.execute("select cardCreatedDate from card where cardId = ?",(cardId,))
-                cardCreatedDate = c.fetchone()
-                card_detatils['cardCreatedDate'] = cardCreatedDate  
+                 
                 redis_cli.set(f"card{cardId}", json.dumps(card_detatils))
 
             else:

@@ -6,7 +6,7 @@ import jwt
 import datetime
 from functools import wraps
 
-database_locale = 'E:\\projects\\kanban\\routes\\kanban.db'
+database_locale = 'routes\\kanban.db'
 
 
 def token_required(f):
