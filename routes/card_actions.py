@@ -191,7 +191,7 @@ def updateCard(u_id, listId, cardId):
 
             if List and LISt:
 
-                c.execute("UPDATE card SET cardName = ?, cardDescription = ?, deadLineDate = ?, cardCompletedDate = ?,status = ? WHERE cardId = ?", (card_detatils["cardNname"], card_detatils["cardDescription"], card_detatils["deadLineDate"], card_detatils["cardCompletedDate"],card_detatils["status"], cardId))
+                c.execute("UPDATE card SET cardName = ?, cardDescription = ?, deadLineDate = ?, cardCompletedDate = ?,status = ? WHERE cardId = ?", (card_detatils["cardName"], card_detatils["cardDescription"], card_detatils["deadLineDate"], card_detatils["cardCompletedDate"],card_detatils["status"], cardId))
                 c.execute("UPDATE contains SET listId = ? WHERE cardId = ?",(LISt[0], cardId))
                 conn.commit()
 
